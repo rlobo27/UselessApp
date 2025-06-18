@@ -1,10 +1,26 @@
+import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, TextInput, Image, TouchableOpacity} from 'react-native';
-//import { Image } from 'expo-image';
+import AlertPopup, { AlertPopupRef } from '../components/AlertPopup';
+
 
 export default function App() {
 
+  const [username, setUsername] = useState<string>('');
+  const alertRef = useRef<AlertPopupRef>(null);
+
   const nada = (): void =>{
-      console.log("Freecover")
+    alertRef.current?.show({
+          title: 'Hey',
+          message: username,
+          type: 'info',
+          position: 'center',
+          showConfirmButton: true,
+          onConfirm:() => {
+            console.log("popup alert clsoed")
+          },
+          
+        });
+      console.log("Freecovernpm ")
     };
 
   return (
@@ -16,17 +32,31 @@ export default function App() {
           style={styles.logo}
         />
       </View>
-      <View>
-        <Text style={styles.tittle}>Nothing</Text>
-        <Text>No information to show? aaaa</Text>
-        <TextInput style={styles.input}
+      <View style={styles.form}>
+        <Text style={styles.tittle}>Login</Text>
+        <TextInput style={styles.input} placeholder='hiiiii' //input user
+        value={username}
+        onChangeText={setUsername}
         />
+        <TextInput style={styles.input} //input password
+        />
+        <TouchableOpacity style={styles.forgotPassword}>
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+          
         <TouchableOpacity 
         style={styles.button}
         onPress={nada}
         >
-          <Text style={styles.bottontext}>Boton</Text>
+          <Text style={styles.bottontext}>Boton 1</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+        style={styles.button}
+        onPress={nada}
+        >
+          <Text style={styles.bottontext}>Boton 2</Text>
+        </TouchableOpacity>
+        <AlertPopup ref={alertRef} />
       </View>
     </SafeAreaView>  
   );
@@ -34,53 +64,59 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 10,
-    backgroundColor: '#ccc',
+    flex: 1,
+    backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-start', 
     marginTop: 0,
   },
-
-  bottontext:{
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+    marginTop: 100, 
+    borderRadius: 30,
+    overflow: 'hidden',
+  },
+  tittle: {
+    color: 'black',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  form: {
+    width: '85%',
+    flex: 1,
+  },
+  input: {
+    borderWidth: 2,
+    borderColor: '#666',
+    borderRadius: 7,
+    padding: 10,
+    marginBottom: 15,
+    marginTop: 10,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: 'black',
+    borderRadius: 7,
+    paddingVertical: 15,
+    alignItems: 'center',
+    borderColor: 'white',
+    marginBottom: 20,
+  },
+  bottontext: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
   },
-
-  logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 10,
-    marginTop:100,
-    borderRadius: 30,
-    overflow: 'hidden',
+  forgotPassword: {
+    alignSelf: 'flex-end',
   },
-
-  tittle: { 
-      color: 'black', 
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 10,
-      textAlign: 'center',
-  },
-
-  input: {
-    borderWidth: 2,
-    backgroundColor: 'lightgray',
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 10,
-    marginBottom: 15,
-    marginTop:10,
-    fontSize: 16,
-  },
-
-  button: {
-    backgroundColor: 'black',
-    borderRadius: 25,
-    paddingVertical: 15,
-    alignItems: 'center',
-    borderColor: 'white',
+  forgotPasswordText: {
+    color: '#666',
+    fontSize: 14,
     marginBottom: 20,
   },
 });

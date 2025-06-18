@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, TextInput, Image, TouchableOpacity} from 'react-native';
+import { router } from 'expo-router';
 import AlertPopup, { AlertPopupRef } from '../components/AlertPopup';
 
 
@@ -7,6 +8,10 @@ export default function App() {
 
   const [username, setUsername] = useState<string>('');
   const alertRef = useRef<AlertPopupRef>(null);
+
+  const goHome = (): void =>{
+    router.replace('home');
+  };
 
   const nada = (): void =>{
     alertRef.current?.show({
@@ -21,6 +26,7 @@ export default function App() {
           
         });
       console.log("Freecovernpm ")
+      setUsername('')
     };
 
   return (
@@ -46,9 +52,9 @@ export default function App() {
           
         <TouchableOpacity 
         style={styles.button}
-        onPress={nada}
+        onPress={goHome}
         >
-          <Text style={styles.bottontext}>Boton 1</Text>
+          <Text style={styles.bottontext}>Iniciar Sesion</Text>
         </TouchableOpacity>
         <TouchableOpacity 
         style={styles.button}

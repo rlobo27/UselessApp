@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
+//import Icon from 'react-native-vector-icons/MaterialIcons';
+import Feather from '@expo/vector-icons/Feather'
 const { width } = Dimensions.get('window');
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
@@ -87,14 +87,14 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
   const getBackgroundColor = (): string => {
     switch (type) {
       case 'success':
-        return '#4CAF50'; // Green
+        return '#fff'; // Green
       case 'error':
         return '#fff'; // Red
       case 'warning':
-        return '#FFC107'; // Orange
+        return '#fff'; // Orange
       case 'info':
       default:
-        return '#2196F3'; // blue
+        return '#fff'; // blue
     }
   };
 
@@ -114,13 +114,18 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
   };
 
   const renderIcon = () => {
-    if (type === 'error') {
-      return (
-        <Icon name="error-outline" size={50} color="#FF3B30" style={styles.icon} /> // Red color for error
-      );
+    switch(type) {
+      case 'success':
+        return <Feather name="check-circle" size={42} color="#FF3B30"/>;
+      case 'error':
+        return <Feather name="alert-circle" size={42} color="#FF3B30"/>; // Red color for error
+      case 'warning':
+        return <Feather name="alert-octagon" size={42} color="#FF3B30"/>;
+      case 'info':
+      default:42
+        return <Feather name="info" size={42} color="#FF3B30"/>;
     }
   };
-
   
   const getJustifyContent = () => {
     switch (position) {
@@ -143,7 +148,7 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
     >
       <View style={[styles.centeredView, { justifyContent: getJustifyContent() }]}>
         <View style={[styles.modalView, { backgroundColor: getBackgroundColor() }]}>
-          {renderIcon()}
+          <View style={styles.circleContainer}>{renderIcon()}</View>
           <Text style={styles.modalTitle}>{getTitleText()}</Text>
           <Text style={styles.modalText}>{message}</Text>
           <View style={styles.buttonContainer}>
@@ -192,9 +197,6 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: width * 0.8,
   },
-  icon: {
-    marginBottom: 15,
-  },
   modalTitle: {
     marginBottom: 15,
     textAlign: 'center',
@@ -232,6 +234,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  circleContainer: {
+    width: 76, // Ajusta el tamaño del círculo según tu preferencia
+    height: 76, // Debe ser igual al width para un círculo perfecto
+    borderRadius: 38, // La mitad del width/height para hacerlo circular
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15, // Mantén el margen inferior que tenías
+    backgroundColor: 'rgba(255, 0, 0, 0.2)', // Ejemplo de rojo transparente (RGBA)
+},
 });
 
 export default AlertPopup;

@@ -16,8 +16,8 @@ export default function App() {
   const nada = (): void =>{
     alertRef.current?.show({
           title: 'Hey',
-          message: username,
-          type: 'info',
+          message: 'Error de inicio de sesion',
+          type: 'error',
           position: 'center',
           showConfirmButton: true,
           onConfirm:() => {

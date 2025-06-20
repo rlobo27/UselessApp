@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width } = Dimensions.get('window');
 
@@ -88,7 +89,7 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
       case 'success':
         return '#4CAF50'; // Green
       case 'error':
-        return '#F44336'; // Red
+        return '#fff'; // Red
       case 'warning':
         return '#FFC107'; // Orange
       case 'info':
@@ -109,6 +110,14 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
       case 'info':
       default:
         return 'Información';
+    }
+  };
+
+  const renderIcon = () => {
+    if (type === 'error') {
+      return (
+        <Icon name="error-outline" size={50} color="#FF3B30" style={styles.icon} /> // Red color for error
+      );
     }
   };
 
@@ -134,6 +143,7 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
     >
       <View style={[styles.centeredView, { justifyContent: getJustifyContent() }]}>
         <View style={[styles.modalView, { backgroundColor: getBackgroundColor() }]}>
+          {renderIcon()}
           <Text style={styles.modalTitle}>{getTitleText()}</Text>
           <Text style={styles.modalText}>{message}</Text>
           <View style={styles.buttonContainer}>
@@ -182,18 +192,21 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: width * 0.8,
   },
+  icon: {
+    marginBottom: 15,
+  },
   modalTitle: {
     marginBottom: 15,
     textAlign: 'center',
     fontSize: 22,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#000',
   },
   modalText: {
     marginBottom: 20,
     textAlign: 'center',
     fontSize: 16,
-    color: 'white',
+    color: '#000',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -204,11 +217,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     elevation: 2,
-    minWidth: 100,
+    minWidth: 120,
     alignItems: 'center',
   },
   confirmButton: {
-    backgroundColor: '#303F9F', // Azul oscuro
+    backgroundColor: '#FF3B30',
   },
   cancelButton: {
     backgroundColor: '#D32F2F', // Rojo oscuro

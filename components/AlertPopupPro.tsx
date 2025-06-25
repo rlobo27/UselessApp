@@ -1,143 +1,122 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef, useCallback } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 const { width } = Dimensions.get('window');
 
-// --- Types ---
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
+
 export type AlertPosition = 'center' | 'top' | 'bottom';
 
-export interface AlertPopupOptions {
-  message: string;
-  type?: AlertType;
-  onConfirm?: () => void;
-  onCancel?: () => void;
-  showCancelButton?: boolean;
-  showConfirmButton?: boolean;
-  title?: string;
-  position?: AlertPosition;
-}
+export interface AlertPopupProps {}
 
 export interface AlertPopupRef {
-  show: (options: AlertPopupOptions) => void;
+  show: (options: {
+    message: string;
+    type?: AlertType;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+    showCancelButton?: boolean;
+    showConfirmButton?: boolean;
+    title?: string;
+    position?: AlertPosition;
+  }) => void;
   hide: () => void;
 }
 
-// --- Translations ---
-const translations = {
-  es: {
-    successTitle: 'Éxito',
-    errorTitle: 'Error',
-    warningTitle: 'Advertencia',
-    infoTitle: 'Información',
-    cancelButton: 'Cancelar',
-    confirmButton: 'Aceptar',
-  },
-  en: {
-    successTitle: 'Success',
-    errorTitle: 'Error',
-    warningTitle: 'Warning',
-    infoTitle: 'Information',
-    cancelButton: 'Cancel',
-    confirmButton: 'Accept',
-  },
-};
-
-// --- Alert Configurations ---
-// Centralized configuration for icons and colors per alert type
-const alertConfigs = {
-  success: {
-    icon: 'check-circle',
-    color: '#28a745', // Green
-    circleColor: 'rgba(40, 167, 69, 0.2)', // Green with transparency
-  },
-  error: {
-    icon: 'alert-circle',
-    color: '#dc3545', // Red
-    circleColor: 'rgba(220, 53, 69, 0.2)', // Red with transparency
-  },
-  warning: {
-    icon: 'alert-octagon',
-    color: '#ffc107', // Orange
-    circleColor: 'rgba(255, 193, 7, 0.2)', // Orange with transparency
-  },
-  info: {
-    icon: 'info',
-    color: '#007bff', // Blue
-    circleColor: 'rgba(0, 123, 255, 0.2)', // Blue with transparency
-  },
-};
-
-const AlertPopup = forwardRef<AlertPopupRef, {}>((_, ref) => {
+const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
   const [visible, setVisible] = useState<boolean>(false);
-  // Using a single state object for all options for cleaner management
-  const [options, setOptions] = useState<AlertPopupOptions>({
-    message: '',
-    type: 'info',
-    showCancelButton: false,
-    showConfirmButton: false,
-    position: 'center',
-  });
-
-  // Use refs for callbacks to prevent stale closures with useImperativeHandle
-  const onConfirmRef = useRef<(() => void) | null>(null);
-  const onCancelRef = useRef<(() => void) | null>(null);
+  const [message, setMessage] = useState<string>('');
+  const [type, setType] = useState<AlertType>('info');
+  const [onConfirmCallback, setOnConfirmCallback] = useState<(() => void) | null>(null);
+  const [onCancelCallback, setOnCancelCallback] = useState<(() => void) | null>(null);
+  const [showCancelButton, setShowCancelButton] = useState<boolean>(false);
+  const [showConfirmButton, setShowConfirmButton] = useState<boolean>(false);
+  const [title, setTitle] = useState<string>('');
+  const [position, setPosition] = useState<AlertPosition>('center');
 
   useImperativeHandle(ref, () => ({
-    show: (newOptions) => {
-      // Merge new options with current state, allowing partial updates
-      setOptions((prevOptions) => ({
-        ...prevOptions,
-        ...newOptions,
-      }));
-      // Store callbacks in refs to ensure they are always up-to-date
-      onConfirmRef.current = newOptions.onConfirm || null;
-      onCancelRef.current = newOptions.onCancel || null;
+    show: ({
+      message,
+      type = 'info',
+      onConfirm = undefined, // Changed default to undefined for consistency with optional types
+      onCancel = undefined, // Changed default to undefined
+      showCancelButton = false,
+      showConfirmButton = false,
+      title = '',
+      position = 'center',
+    }) => {
+      setMessage(message);
+      setType(type);
+      setOnConfirmCallback(() => onConfirm || null); // Ensure null is set if undefined
+      setOnCancelCallback(() => onCancel || null);   // Ensure null is set if undefined
+      setShowCancelButton(showCancelButton);
+      setShowConfirmButton(showConfirmButton);
+      setTitle(title);
+      setPosition(position);
       setVisible(true);
     },
     hide: () => {
       setVisible(false);
-      // Reset options and refs after hiding, or keep them if you prefer persistence
-      setOptions({
-        message: '',
-        type: 'info',
-        showCancelButton: false,
-        showConfirmButton: false,
-        language: 'es',
-        position: 'center',
-      });
-      onConfirmRef.current = null;
-      onCancelRef.current = null;
+      setMessage('');
+      setType('info');
+      setOnConfirmCallback(null);
+      setOnCancelCallback(null);
+      setShowCancelButton(false);
+      setShowConfirmButton(false);
+      setTitle('');
+      setPosition('center');
     },
   }));
 
-  // Using useCallback for stable function references
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = () => {
     setVisible(false);
-    onConfirmRef.current?.(); // Call directly from the ref
-  }, []); // Dependencies array is empty as onConfirmRef is stable
+    onConfirmCallback?.(); // Use optional chaining for safer call
+  };
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     setVisible(false);
-    onCancelRef.current?.(); // Call directly from the ref
-  }, []); // Dependencies array is empty as onCancelRef is stable
+    onCancelCallback?.(); // Use optional chaining for safer call
+  };
+
+  const getBackgroundColor = (): string => {
+    // Current logic returns white for all types. Retaining this behavior.
+    return '#fff';
+  };
 
   const getTitleText = (): string => {
-    const { title, type, language = 'es' } = options; // Destructure language with default
     if (title) return title;
-    // Safely get translation, fall back to default ES if type translation is missing
-    return translations[language][`${type}Title`] || translations.es[`${type}Title`];
+    switch (type) {
+      case 'success':
+        return 'Éxito';
+      case 'error':
+        return 'Error';
+      case 'warning':
+        return 'Advertencia';
+      case 'info':
+      default:
+        return 'Información';
+    }
   };
 
   const renderIcon = () => {
-    const { type } = options;
-    const config = alertConfigs[type] || alertConfigs.info; // Fallback to info config
-    return <Feather name={config.icon} size={42} color={config.color} />;
+    const iconSize = 42;
+    const iconColor = '#FF3B30'; // Consistent color for all icons
+
+    switch (type) {
+      case 'success':
+        return <Feather name="check-circle" size={iconSize} color={iconColor} />;
+      case 'error':
+        return <Feather name="alert-circle" size={iconSize} color={iconColor} />;
+      case 'warning':
+        return <Feather name="alert-octagon" size={iconSize} color={iconColor} />;
+      case 'info':
+      default:
+        return <Feather name="info" size={iconSize} color={iconColor} />;
+    }
   };
-  
+
   const getJustifyContent = () => {
-    const { position = 'center' } = options; // Destructure position with default
     switch (position) {
       case 'top':
         return 'flex-start';
@@ -149,25 +128,17 @@ const AlertPopup = forwardRef<AlertPopupRef, {}>((_, ref) => {
     }
   };
 
-  // Destructure options for easier access in JSX
-  const { type, message, showCancelButton, showConfirmButton, language = 'es' } = options;
-  const currentConfig = alertConfigs[type] || alertConfigs.info; // Get current alert type configuration
-
   return (
     <Modal
       transparent={true}
       animationType="fade"
       visible={visible}
-      onRequestClose={() => setVisible(false)} // Allows closing with hardware back button on Android
+      onRequestClose={() => setVisible(false)}
     >
       <View style={[styles.centeredView, { justifyContent: getJustifyContent() }]}>
-        <View style={styles.modalView}>
-          {/* Icon wrapped in a circle container with dynamic background color */}
-          <View style={[styles.circleContainer, { backgroundColor: currentConfig.circleColor }]}>
-            {renderIcon()}
-          </View>
-          {/* Title text with dynamic color based on alert type */}
-          <Text style={[styles.modalTitle, { color: currentConfig.color }]}>{getTitleText()}</Text>
+        <View style={[styles.modalView, { backgroundColor: getBackgroundColor() }]}>
+          <View style={styles.circleContainer}>{renderIcon()}</View>
+          <Text style={styles.modalTitle}>{getTitleText()}</Text>
           <Text style={styles.modalText}>{message}</Text>
           <View style={styles.buttonContainer}>
             {showCancelButton && (
@@ -175,21 +146,16 @@ const AlertPopup = forwardRef<AlertPopupRef, {}>((_, ref) => {
                 style={[styles.button, styles.cancelButton]}
                 onPress={handleCancel}
               >
-                <Text style={styles.textStyle}>
-                  {translations[language].cancelButton}
-                </Text>
+                <Text style={styles.textStyle}>Cancelar</Text>
               </TouchableOpacity>
             )}
             {showConfirmButton && (
               <TouchableOpacity
-              // Confirm button background color matches the alert type's primary color
-              style={[styles.button, styles.confirmButton, { backgroundColor: currentConfig.color }]}
-              onPress={handleConfirm}
-            >
-              <Text style={styles.textStyle}>
-                {translations[language].confirmButton}
-              </Text>
-            </TouchableOpacity>
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleConfirm}
+              >
+                <Text style={styles.textStyle}>Aceptar</Text>
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -202,8 +168,8 @@ const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dim background behind the modal
-    paddingVertical: 20, // Add some vertical padding for top/bottom positions
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingVertical: 20,
   },
   modalView: {
     margin: 20,
@@ -218,15 +184,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    width: width * 0.8, // Modal width responsive to screen size
-    backgroundColor: '#fff', // Consistent white background for the modal content
+    width: width * 0.8,
   },
   modalTitle: {
     marginBottom: 15,
     textAlign: 'center',
     fontSize: 22,
     fontWeight: 'bold',
-    // Color set dynamically based on alert type
+    color: '#000',
   },
   modalText: {
     marginBottom: 20,
@@ -243,15 +208,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     elevation: 2,
-    minWidth: 120,
+    minWidth: 120, // Added minWidth for consistent button size
     alignItems: 'center',
   },
   confirmButton: {
-    // Background color set dynamically based on alert type
+    backgroundColor: '#FF3B30',
   },
   cancelButton: {
-    backgroundColor: '#6c757d', // A more neutral gray for the cancel button
-    marginRight: 10, // Maintain space if both buttons are present
+    backgroundColor: '#D32F2F', // Darker red for cancel
+    marginRight: 10, // Added marginRight for spacing between buttons
   },
   textStyle: {
     color: 'white',
@@ -261,11 +226,11 @@ const styles = StyleSheet.create({
   circleContainer: {
     width: 76,
     height: 76,
-    borderRadius: 38, // Half of width/height for a perfect circle
+    borderRadius: 38,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
-    // Background color set dynamically based on alert type
+    backgroundColor: 'rgba(255, 0, 0, 0.2)', // Transparent red background for the circle
   },
 });
 

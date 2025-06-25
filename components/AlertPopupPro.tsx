@@ -4,89 +4,88 @@ import Feather from '@expo/vector-icons/Feather';
 
 const { width } = Dimensions.get('window');
 
+// --- Type Definitions ---
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
-
 export type AlertPosition = 'center' | 'top' | 'bottom';
 
-export interface AlertPopupProps {}
+export interface AlertPopupOptions {
+  message: string;
+  type?: AlertType;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  showCancelButton?: boolean;
+  showConfirmButton?: boolean;
+  title?: string;
+  position?: AlertPosition;
+}
 
 export interface AlertPopupRef {
-  show: (options: {
-    message: string;
-    type?: AlertType;
-    onConfirm?: () => void;
-    onCancel?: () => void;
-    showCancelButton?: boolean;
-    showConfirmButton?: boolean;
-    title?: string;
-    position?: AlertPosition;
-  }) => void;
+  show: (options: AlertPopupOptions) => void;
   hide: () => void;
 }
 
-const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
+// --- AlertPopup Component ---
+const AlertPopup = forwardRef<AlertPopupRef, {}>((props, ref) => {
   const [visible, setVisible] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>('');
-  const [type, setType] = useState<AlertType>('info');
-  const [onConfirmCallback, setOnConfirmCallback] = useState<(() => void) | null>(null);
-  const [onCancelCallback, setOnCancelCallback] = useState<(() => void) | null>(null);
-  const [showCancelButton, setShowCancelButton] = useState<boolean>(false);
-  const [showConfirmButton, setShowConfirmButton] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>('');
-  const [position, setPosition] = useState<AlertPosition>('center');
+  const [options, setOptions] = useState<AlertPopupOptions>({
+    message: '',
+    type: 'info',
+    showCancelButton: false,
+    showConfirmButton: false,
+    title: '',
+    position: 'center',
+  });
 
+  // Consolidate state and default values for better management
   useImperativeHandle(ref, () => ({
-    show: ({
-      message,
-      type = 'info',
-      onConfirm = undefined, // Changed default to undefined for consistency with optional types
-      onCancel = undefined, // Changed default to undefined
-      showCancelButton = false,
-      showConfirmButton = false,
-      title = '',
-      position = 'center',
-    }) => {
-      setMessage(message);
-      setType(type);
-      setOnConfirmCallback(() => onConfirm || null); // Ensure null is set if undefined
-      setOnCancelCallback(() => onCancel || null);   // Ensure null is set if undefined
-      setShowCancelButton(showCancelButton);
-      setShowConfirmButton(showConfirmButton);
-      setTitle(title);
-      setPosition(position);
+    show: (newOptions) => {
+      setOptions(prevOptions => ({
+        ...prevOptions, // Keep previous defaults if not overridden
+        ...newOptions, // Apply new options
+      }));
       setVisible(true);
     },
     hide: () => {
       setVisible(false);
-      setMessage('');
-      setType('info');
-      setOnConfirmCallback(null);
-      setOnCancelCallback(null);
-      setShowCancelButton(false);
-      setShowConfirmButton(false);
-      setTitle('');
-      setPosition('center');
+      // Reset to initial state or sensible defaults after hiding
+      setOptions({
+        message: '',
+        type: 'info',
+        showCancelButton: false,
+        showConfirmButton: false,
+        title: '',
+        position: 'center',
+      });
     },
   }));
 
   const handleConfirm = () => {
     setVisible(false);
-    onConfirmCallback?.(); // Use optional chaining for safer call
+    options.onConfirm?.(); // Use optional chaining for conciseness
   };
 
   const handleCancel = () => {
     setVisible(false);
-    onCancelCallback?.(); // Use optional chaining for safer call
+    options.onCancel?.(); // Use optional chaining for conciseness
   };
 
+  // Memoize these calculations if they become complex or are called frequently
+  // For now, they are simple enough not to require it.
   const getBackgroundColor = (): string => {
-    // Current logic returns white for all types. Retaining this behavior.
-    return '#fff';
+    // Colors are intentionally kept as #fff as per requirement "sin cambiar colores"
+    switch (options.type) {
+      case 'success':
+      case 'error':
+      case 'warning':
+      case 'info':
+      default:
+        return '#fff';
+    }
   };
 
   const getTitleText = (): string => {
-    if (title) return title;
-    switch (type) {
+    if (options.title) return options.title;
+    switch (options.type) {
       case 'success':
         return 'Éxito';
       case 'error':
@@ -100,24 +99,22 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
   };
 
   const renderIcon = () => {
-    const iconSize = 42;
-    const iconColor = '#FF3B30'; // Consistent color for all icons
-
-    switch (type) {
+    const iconColor = '#FF3B30'; // Specific color as per your original code
+    switch (options.type) {
       case 'success':
-        return <Feather name="check-circle" size={iconSize} color={iconColor} />;
+        return <Feather name="check-circle" size={42} color={iconColor} />;
       case 'error':
-        return <Feather name="alert-circle" size={iconSize} color={iconColor} />;
+        return <Feather name="alert-circle" size={42} color={iconColor} />;
       case 'warning':
-        return <Feather name="alert-octagon" size={iconSize} color={iconColor} />;
+        return <Feather name="alert-octagon" size={42} color={iconColor} />;
       case 'info':
       default:
-        return <Feather name="info" size={iconSize} color={iconColor} />;
+        return <Feather name="info" size={42} color={iconColor} />;
     }
   };
 
   const getJustifyContent = () => {
-    switch (position) {
+    switch (options.position) {
       case 'top':
         return 'flex-start';
       case 'bottom':
@@ -139,9 +136,9 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
         <View style={[styles.modalView, { backgroundColor: getBackgroundColor() }]}>
           <View style={styles.circleContainer}>{renderIcon()}</View>
           <Text style={styles.modalTitle}>{getTitleText()}</Text>
-          <Text style={styles.modalText}>{message}</Text>
+          <Text style={styles.modalText}>{options.message}</Text>
           <View style={styles.buttonContainer}>
-            {showCancelButton && (
+            {options.showCancelButton && (
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
                 onPress={handleCancel}
@@ -149,7 +146,7 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
                 <Text style={styles.textStyle}>Cancelar</Text>
               </TouchableOpacity>
             )}
-            {showConfirmButton && (
+            {options.showConfirmButton && (
               <TouchableOpacity
                 style={[styles.button, styles.confirmButton]}
                 onPress={handleConfirm}
@@ -164,6 +161,7 @@ const AlertPopup = forwardRef<AlertPopupRef, AlertPopupProps>((props, ref) => {
   );
 });
 
+// --- Styles ---
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
@@ -208,15 +206,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     elevation: 2,
-    minWidth: 120, // Added minWidth for consistent button size
+    minWidth: 120,
     alignItems: 'center',
   },
   confirmButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#FF3B30', // Your original red
   },
   cancelButton: {
-    backgroundColor: '#D32F2F', // Darker red for cancel
-    marginRight: 10, // Added marginRight for spacing between buttons
+    backgroundColor: '#A0A0A0', // Your original dark red
+    marginRight: 10,
   },
   textStyle: {
     color: 'white',
@@ -230,7 +228,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
-    backgroundColor: 'rgba(255, 0, 0, 0.2)', // Transparent red background for the circle
+    backgroundColor: 'rgba(255, 0, 0, 0.2)', // Your original transparent red
   },
 });
 
